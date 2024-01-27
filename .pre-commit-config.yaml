@@ -2,7 +2,7 @@ ci:
   autofix_prs: false
   autoupdate_schedule: quarterly
   autoupdate_commit_msg: 'build(pre-commit): [pre-commit.ci] pre-commit autoupdate'
-  skip: # see linters.yaml -> pre-commit-extras job
+  skip: # see linters.yaml -> pre-commit job
     - "rich-codex"
     - "mypy"
 
