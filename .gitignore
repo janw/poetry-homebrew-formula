@@ -3,3 +3,7 @@ dist/
 
 .coverage
 coverage.xml
+created.txt
+deleted.txt
+
+*.rb

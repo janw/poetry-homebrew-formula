@@ -1,19 +1,22 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cleo.helpers import option
 from cleo.io.outputs.output import Verbosity
-from jinja2 import Environment, FileSystemLoader
 from poetry.console.commands.group_command import GroupCommand
+from poetry.core.packages.dependency_group import MAIN_GROUP
 from poetry.plugins import ApplicationPlugin
 from poetry.puzzle.solver import Solver
 from poetry.repositories.lockfile_repository import LockfileRepository
 
+from poetry_homebrew_formula.templating import generate_template, get_template
 from poetry_homebrew_formula.types import PackageInfo, RootPackageInfo
 
 if TYPE_CHECKING:
+    from jinja2 import Template
     from poetry.console.application import Application
     from poetry.core.packages.package import Package
     from poetry.core.packages.project_package import ProjectPackage
@@ -21,11 +24,10 @@ if TYPE_CHECKING:
     from poetry.repositories.repository import Repository
 
 COMMAND_NAME = "homebrew-formula"
-DEFAULT_TEMPLATE = "formula.rb.j2"
+RESOURCES_TEMPLATE = "resources.rb.j2"
+PACKAGE_URL_TEMPLATE = "package_url.rb.j2"
 
 HERE = Path(__file__).parent
-DEFAULT_TEMPLATE_DIR = HERE / "templates"
-TEMPLATE_ENV = Environment(loader=FileSystemLoader([DEFAULT_TEMPLATE_DIR, Path.cwd()]), trim_blocks=True)
 
 
 class PoetryHomebrewFormulaCommand(GroupCommand):
@@ -36,39 +38,87 @@ class PoetryHomebrewFormulaCommand(GroupCommand):
         option(
             "template",
             "t",
-            "A custom template to render the formula from.",
+            "A custom template to render the formula from. Use '-' to read from stdin.",
             flag=False,
         ),
         option(
             "output",
             "o",
-            "The name of the formula file to write to.",
+            "The name of the formula file to write to. Use '-' to write to stdout.",
             flag=False,
         ),
     ]
 
     repo: Repository
+    default_groups: set[str] = {MAIN_GROUP}
 
     def handle(self) -> int:
-        self.line("Generating formula ...")
+        if self.option("output") == "-":
+            # Poetry/Cleo is entirely oblivious about the concept of emitting anything
+            # to stdout. When the user requested that we have to redirect all emitted
+            # log output to stderr using this hack:
+            self.io._output = self.io._error_output
+
+        self.line_error("<info>Generating formula</info>")
+        template = self.load_template()
         self.repo = self.poetry.pool.repository("pypi")
         package = self.project_with_activated_groups_only()
-        output = Path(self.option("output") or (Path.cwd() / f"{package.name}.rb"))
-        self.render_formula(package, output=output)
-        return 0
+        package_info = self.get_root_package_info(package)
+        resources = [self.get_package_info(dependency) for dependency in self.resolve_dependencies(package).packages]
 
-    def render_formula(self, package: ProjectPackage, *, output: Path) -> None:
-        template_name = self.option("template") or DEFAULT_TEMPLATE
-        template = TEMPLATE_ENV.get_template(template_name)
-        self.line(f"Rendering template {template.filename} to {output}", verbosity=Verbosity.VERBOSE)
-        formula = template.render(
-            package=self.get_root_package_info(package),
-            resources=[self.get_package_info(dependency) for dependency in self.resolve_dependencies(package).packages],
+        self.render_formula(
+            template=template,
+            package=package_info,
+            resources=resources,
             formula_name=package.name.title().replace("-", "").replace("_", ""),
         )
+        return 0
 
+    def load_template(self) -> Template:
+        if (template := self.option("template")) == "-":
+            self.line("Reading template from stdin", verbosity=Verbosity.VERBOSE)
+
+            stdin = sys.stdin.read()
+            self.line(f"Template content: {stdin}", verbosity=Verbosity.VERY_VERBOSE)
+            return generate_template(stdin)
+        return get_template(template)
+
+    def render_formula(
+        self,
+        *,
+        template: Template,
+        package: RootPackageInfo,
+        resources: list[PackageInfo],
+        formula_name: str,
+    ) -> None:
+        formula = (
+            template.render(
+                package=package,
+                formula_name=formula_name,
+                RESOURCES=self._render_resources(resources),
+                PACKAGE_URL=self._render_package_url(package),
+            ).rstrip()
+            + "\n"
+        )
+
+        if not (output := self.option("output")):
+            output = Path.cwd() / f"{package.name}.rb"
+        elif output == "-":
+            self.line("Writing template to stdout", verbosity=Verbosity.VERBOSE)
+            sys.stdout.write(formula)
+            return
+
+        self.line(f"Writing template to {output}", verbosity=Verbosity.VERBOSE)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(formula)
+
+    def _render_resources(self, resources: list[PackageInfo]) -> str:
+        template = get_template(RESOURCES_TEMPLATE)
+        return template.render(resources=resources)
+
+    def _render_package_url(self, package: RootPackageInfo) -> str:
+        template = get_template(PACKAGE_URL_TEMPLATE)
+        return template.render(package=package)
 
     def resolve_dependencies(self, package: ProjectPackage) -> LockfileRepository:
         locked_repository = self.poetry.locker.locked_repository()

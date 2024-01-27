@@ -27,7 +27,6 @@ rich-codex = "^1.2.7"
 commitizen = "^3.13.0"
 pre-commit = "^3.6.0"
 
-
 [tool.poetry.group.tests.dependencies]
 pytest = "^7.4.4"
 pytest-cov = "^4.1.0"
@@ -35,7 +34,6 @@ pytest-responses = "^0.5.1"
 
 [tool.poetry.plugins."poetry.application.plugin"]
 homebrew-formula = "poetry_homebrew_formula.plugin:PoetryHomebrewFormulaPlugin"
-
 
 [tool.commitizen]
 version_scheme = "semver"
@@ -76,6 +74,24 @@ quote-style = "double"
 [tool.ruff.mccabe]
 max-complexity = 8
 
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests",]
+addopts = "--cov --cov-report term --no-cov-on-fail"
+
+[tool.coverage.run]
+branch = true
+source = [
+    "poetry_homebrew_formula",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:"
+]
+precision = 2
+show_missing = true
+
 [tool.mypy]
 disallow_untyped_defs = true
 disallow_any_generics = true
@@ -88,7 +104,6 @@ strict_optional = true
 strict_equality = true
 check_untyped_defs = true
 no_implicit_reexport = true
-
 packages = ["poetry_homebrew_formula", "tests"]
 
 [build-system]

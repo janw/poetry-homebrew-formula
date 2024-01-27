@@ -4,22 +4,17 @@ class {{ formula_name }} < Formula
   desc "{{ package.description }}"
 {% if package.homepage %}  homepage "{{ package.homepage }}"
 {% endif %}
-  url "{{ package.url }}"
-  {{ package.checksum_name }} "{{ package.checksum }}"
 {% if package.license %}  license "{{ package.license }}"
 {% endif %}
+
+{{ PACKAGE_URL }}
 
   depends_on "python3"
 {% for dependency in dependencies %}  depends_on {{ dependency }}
 {% endfor %}
 
-{% for resource in resources %}
-  resource "{{ resource.name }}" do
-    url "{{ resource.url }}"
-    {{ resource.checksum_name }} "{{ resource.checksum }}"
-  end
+{{ RESOURCES }}
 
-{% endfor %}
   def install
     virtualenv_create(libexec, "python3")
     virtualenv_install_with_resources
