@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "poetry-homebrew-formula"
-version = "0.0.0"
+version = "0.1.0-a0"
 description = "Generate Homebrew formulae for Poetry projects"
 authors = [
     "Celsius Narhwal <hello@celsiusnarhwal.dev>",
