@@ -1,0 +1,70 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "*"
+
+env:
+  POETRY_EDGE_SOURCE: 'git+https://github.com/python-poetry/poetry.git'
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13-dev"
+        poetry-version:
+          - "1.6.*"
+          - "1.7.*"
+          - "edge"
+
+    name: pytest-${{ matrix.python-version }}-${{ matrix.poetry-version }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        id: homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        with:
+          core: false
+          cask: false
+          test-bot: false
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Set up python environment
+        uses: actions/setup-python@v5
+        with:
+          cache: poetry
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: poetry install --no-root --with=tests --sync
+
+      - name: Install poetry version under test
+        run: |
+          if [ "${{ matrix.poetry-version }}" = "edge" ]; then
+            poetry run pip install -U "${{ env.POETRY_EDGE_SOURCE }}";
+          else
+            poetry run pip install -U "poetry==${{ matrix.poetry-version }}";
+          fi
+
+      - run: poetry run pytest --cov-report=xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          name: coverage-${{ matrix.python-version }}-${{ matrix.poetry-version }}

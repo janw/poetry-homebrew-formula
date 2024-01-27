@@ -1,0 +1,95 @@
+[tool.poetry]
+name = "poetry-homebrew-formula"
+version = "0.0.0"
+description = "Generate Homebrew formulae for Poetry projects"
+authors = [
+    "Celsius Narhwal <hello@celsiusnarhwal.dev>",
+    "Jan Willhaus <mail@janwillhaus.de>",
+]
+maintainers = [
+    "Jan Willhaus <mail@janwillhaus.de>",
+]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/janw/poetry-homebrew-formula"
+include = [
+    "poetry_brew/templates/*.j2",
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+poetry = "^1.7"
+jinja2 = "^3.1.2"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.14"
+mypy = "^1.8.0"
+rich-codex = "^1.2.7"
+commitizen = "^3.13.0"
+
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^7.4.4"
+pytest-cov = "^4.1.0"
+pytest-responses = "^0.5.1"
+
+[tool.poetry.plugins."poetry.application.plugin"]
+homebrew-formula = "poetry_homebrew_formula.plugin:PoetryHomebrewFormulaPlugin"
+
+
+[tool.commitizen]
+version_scheme = "semver"
+version_provider = "poetry"
+version_files = [
+    "pyproject.toml:version = ",
+    "poetry_homebrew_formula/__init__.py",
+]
+annotated_tag = true
+tag_format = "v$version"
+# update_changelog_on_bump = true
+changelog_merge_prerelease = true
+major_version_zero = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-select = [
+    "I",   # isort
+    "B",   # bugbear
+    "A",   # builtins
+    "ISC", # implicit-str-concat
+    "Q",   # quotes
+    "TID", # tidy-imports
+    "C4",  # comprehensions
+    "SIM", # simplify
+    "C90", # mccabe
+]
+ignore = [
+    "SIM108", # if-else-block-instead-of-if-exp
+    "ISC001", # single-line-implicit-string-concatenation
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.mccabe]
+max-complexity = 8
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_incomplete_defs = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_optional = true
+strict_equality = true
+check_untyped_defs = true
+no_implicit_reexport = true
+
+packages = ["poetry_homebrew_formula", "tests"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
