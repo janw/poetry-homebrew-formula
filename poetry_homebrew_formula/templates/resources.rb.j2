@@ -1,0 +1,6 @@
+{% for resource in resources %}  resource "{{ resource.name }}" do
+    url "{{ resource.url }}"
+    {{ resource.checksum_name }} "{{ resource.checksum }}"
+  end
+
+{% endfor %}

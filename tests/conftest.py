@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 from shutil import rmtree
@@ -31,3 +32,10 @@ def homebrew_fresh_tap(homebrew_tapdir: Path) -> Iterator[Path]:
     (homebrew_tapdir / "README.md").touch()
     yield homebrew_tapdir
     rmtree(homebrew_tapdir, ignore_errors=True)
+
+
+@pytest.fixture
+def tmp_path_cd(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[Path]:
+    os.chdir(tmp_path)
+    yield tmp_path
+    os.chdir(request.config.invocation_params.dir)
