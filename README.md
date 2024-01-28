@@ -44,4 +44,4 @@ This project was inspired by [poetry-brew](https://pypi.org/project/poetry-brew/
 Run `poetry homebrew-formula --help` for details on how to use it:
 
 <!-- RICH-CODEX fake_command: "poetry homebrew-formula --help" -->
-![`poetry run poetry homebrew-formula --help`](.assets/homebrew-formula-help.svg)
+![`poetry run poetry homebrew-formula --help --ansi`](.assets/homebrew-formula-help.svg)
