@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "poetry-homebrew-formula"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generate Homebrew formulae for Poetry projects"
 authors = [
     "Jan Willhaus <mail@janwillhaus.de>",

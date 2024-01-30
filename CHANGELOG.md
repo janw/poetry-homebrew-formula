@@ -1,3 +1,9 @@
+## v0.2.0 (2024-01-30)
+
+### Feat
+
+- Allow loading from multiple repos (#6)
+
 ## v0.1.0 (2024-01-29)
 
 ### Feat
