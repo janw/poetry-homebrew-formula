@@ -50,7 +50,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: poetry install --no-root --with=tests --sync
+        run: poetry install --with=tests --sync
 
       - name: Install poetry version under test
         run: |

@@ -61,7 +61,6 @@ class PoetryHomebrewFormulaCommand(GroupCommand):
 
         self.line_error("<info>Generating formula</info>")
         template = self.load_template()
-        self.repo = self.poetry.pool.repository("pypi")
         package = self.project_with_activated_groups_only()
         package_info = self.get_root_package_info(package)
         resources = [self.get_package_info(dependency) for dependency in self.resolve_dependencies(package).packages]
@@ -101,16 +100,17 @@ class PoetryHomebrewFormulaCommand(GroupCommand):
             + "\n"
         )
 
-        if not (output := self.option("output")):
-            output = Path.cwd() / f"{package.name}.rb"
-        elif output == "-":
+        if (output := self.option("output")) == "-":
             self.line("Writing template to stdout", verbosity=Verbosity.VERBOSE)
             sys.stdout.write(formula)
             return
+        if not output:
+            output = f"{package.name}.rb"
 
-        self.line(f"Writing template to {output}", verbosity=Verbosity.VERBOSE)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(formula)
+        output_path = Path(output)
+        self.line(f"Writing template to {output_path}", verbosity=Verbosity.VERBOSE)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(formula)
 
     def _render_resources(self, resources: list[PackageInfo]) -> str:
         template = get_template(RESOURCES_TEMPLATE)
@@ -154,9 +154,10 @@ class PoetryHomebrewFormulaCommand(GroupCommand):
         )
 
     def pick_link(self, package: Package) -> Link:
-        for link in self.repo.find_links_for_package(package):
-            if link.is_sdist:
-                return link
+        for repo in self.poetry.pool.repositories:
+            for link in repo.find_links_for_package(package):
+                if link.is_sdist:
+                    return link
         raise RuntimeError(f"No valid link found for {package.name}. ")
 
 

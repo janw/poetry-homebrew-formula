@@ -33,6 +33,7 @@ TEMPLATE_ENV = Environment(
         ]
     ),
     trim_blocks=True,
+    autoescape=False,
 )
 
 
