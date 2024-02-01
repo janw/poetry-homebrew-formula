@@ -1,3 +1,9 @@
+## v0.3.0 (2024-02-01)
+
+### Feat
+
+- Expose `resources` list in template context
+
 ## v0.2.0 (2024-01-30)
 
 ### Feat
