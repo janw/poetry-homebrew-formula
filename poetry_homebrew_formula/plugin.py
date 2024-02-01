@@ -94,6 +94,7 @@ class PoetryHomebrewFormulaCommand(GroupCommand):
             template.render(
                 package=package,
                 formula_name=formula_name,
+                resources=resources,
                 RESOURCES=self._render_resources(resources),
                 PACKAGE_URL=self._render_package_url(package),
             ).rstrip()
